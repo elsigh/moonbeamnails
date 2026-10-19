@@ -1,6 +1,6 @@
 import { BotIdClient } from "botid/client";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
 import { Suspense } from "react";
@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { ActionBar } from "@/components/action-bar";
 import { AgentButton } from "@/components/agent/agent-button";
 import { AnalyticsComponents } from "@/components/analytics";
+import { PreviewBanner } from "@/components/brand/preview-banner";
 import { CartUI } from "@/components/cart/cart-ui";
 import { CartProviderWrapper } from "@/components/cart/context";
 import { CartStandardActionsScript } from "@/components/cart/standard-actions";
@@ -22,8 +23,14 @@ import { buildAlternates } from "@/lib/seo";
 export const ensureStatic = "prefetch";
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#f6f3f8",
 };
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  weight: "500",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <CartStandardActionsScript />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} flex min-h-dvh flex-col font-sans antialiased`}
+        className={`${fraunces.variable} ${geistSans.variable} ${geistMono.variable} flex min-h-dvh flex-col font-sans antialiased`}
       >
         <a
           href="#main-content"
@@ -54,6 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <SiteSchema />
+        <PreviewBanner />
 
         <CartProviderWrapper cartData={cartData}>
           <Nav />
@@ -77,7 +85,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 export const generateMetadata = async (): Promise<Metadata> => {
   return {
     alternates: buildAlternates({ pathname: "/" }),
-    description: `Shop premium products, curated collections, and latest offers from ${shopConfig.site.name}.`,
+    description: shopConfig.site.description,
     generator: shopConfig.site.name,
     metadataBase: new URL(shopConfig.site.url),
     openGraph: {

@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { shopConfig } from "@/lib/config";
+import { isMockCatalog, MOCK_CHECKOUT_MESSAGE } from "@/lib/mock";
 import {
   getProductPurchaseOptions,
   getSelectedColorImage,
@@ -177,7 +178,7 @@ function ProductInfoArea({
         data-uniform-price={product.hasUniformPricing}
       >
         <div data-slot="product-info-header">
-          <h1 className="text-foreground text-3xl">{product.title}</h1>
+          <h1 className="font-display text-foreground text-3xl sm:text-4xl">{product.title}</h1>
           {product.hasUniformPricing ? (
             <ProductPrice
               amount={product.priceRange.minVariantPrice.amount}
@@ -282,10 +283,11 @@ function ProductInfoContent({
           <BuyButtons
             fallbackVariant={fallbackVariant}
             availableForSale={product.availableForSale}
-            buyWithShop={shopConfig.pdp.buyWithShop.isEnabled}
+            buyWithShop={shopConfig.pdp.buyWithShop.isEnabled && !isMockCatalog()}
             quantityPicker={shopConfig.pdp.quantityPicker.isEnabled}
           />
         )}
+        <PreviewCheckoutNote />
       </div>
     </ProductForm>
   );
@@ -317,8 +319,14 @@ function ProductInfoFallback({
           variant={product.defaultVariant}
         />
       )}
+      <PreviewCheckoutNote />
     </div>
   );
+}
+
+function PreviewCheckoutNote() {
+  if (!isMockCatalog()) return null;
+  return <p className="text-sm text-muted-foreground">{MOCK_CHECKOUT_MESSAGE}</p>;
 }
 
 // Bundle relationships are product-level, so keep them in the static shell.

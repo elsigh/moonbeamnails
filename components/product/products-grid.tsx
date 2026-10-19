@@ -31,7 +31,7 @@ export function ProductsGrid({ collectionUrl, eagerCount = 0, limit, title }: Pr
   return (
     <div className="grid gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl sm:text-3xl">{title}</h2>
+        <h2 className="font-display text-3xl sm:text-4xl">{title}</h2>
         {collectionUrl && (
           <Link
             href={collectionUrl}

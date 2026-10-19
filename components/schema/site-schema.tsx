@@ -4,9 +4,11 @@ function buildSiteSchema() {
   return [
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
+      "@type": "OnlineStore",
       name: shopConfig.site.name,
       url: shopConfig.site.url,
+      description: shopConfig.site.description,
+      image: `${shopConfig.site.url}/og-default.png`,
       logo: `${shopConfig.site.url}/icons/icon-512.png`,
     },
     {

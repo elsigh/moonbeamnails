@@ -4,7 +4,7 @@ import { shopConfig } from "@/lib/config";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    background_color: "#ffffff",
+    background_color: "#f6f3f8",
     description: shopConfig.site.description,
     display: "standalone",
     icons: [
@@ -20,6 +20,6 @@ export default function manifest(): MetadataRoute.Manifest {
     name: shopConfig.site.name,
     short_name: shopConfig.site.name,
     start_url: "/",
-    theme_color: "#ffffff",
+    theme_color: "#f6f3f8",
   };
 }

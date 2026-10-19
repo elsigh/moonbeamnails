@@ -1,7 +1,7 @@
 import { cn } from "cn";
 import Image from "next/image";
 
-import { ImagePlaceholder } from "@/components/ui/image-placeholder";
+import { NailSetArt } from "@/components/brand/nail-set";
 import { Link } from "@/components/ui/link";
 import type { CollectionWithThumbnail } from "@/lib/collections/types";
 
@@ -34,12 +34,12 @@ export function CollectionCard({
             src={thumbnail.url}
           />
         ) : (
-          <ImagePlaceholder className="size-full" />
+          <NailSetArt title={title} />
         )}
       </div>
       <h2
         data-slot="collection-card-title"
-        className="py-2.5 text-sm font-medium text-foreground line-clamp-1"
+        className="py-2.5 font-display text-base font-medium text-foreground line-clamp-1"
       >
         {title}
       </h2>

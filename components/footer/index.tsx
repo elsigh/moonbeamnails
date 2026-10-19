@@ -1,5 +1,6 @@
 import { cn } from "cn";
 
+import { Wordmark } from "@/components/brand/wordmark";
 import { MenuLink } from "@/components/nav/menu-link";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
@@ -13,7 +14,18 @@ import type { SocialLink } from "./social-links";
 
 export async function Footer() {
   const socialLinks: SocialLink[] = [];
-  const items: MenuItem[] = [];
+  const items: MenuItem[] = [
+    {
+      id: "footer-shop",
+      items: [
+        { id: "footer-celestial", items: [], title: "Celestial", url: "/collections/celestial" },
+        { id: "footer-all", items: [], title: "All sets", url: "/collections/all" },
+        { id: "footer-collections", items: [], title: "Collections", url: "/collections" },
+      ],
+      title: "Shop",
+      url: "/collections/all",
+    },
+  ];
   const policies = await getShopPolicies({}).catch(() => []);
   return (
     <footer>
@@ -21,6 +33,13 @@ export async function Footer() {
       <Container className={cn("pt-20 pb-10", shopConfig.agent.isEnabled && "pb-22")}>
         <Sections className="gap-10">
           {items.length > 0 && <FooterMenu items={items} />}
+          <div className="grid justify-items-center gap-2.5 sm:justify-items-start">
+            <Wordmark />
+            <p className="max-w-md text-center text-sm text-muted-foreground sm:text-left">
+              Handmade press-on nails, painted in small batches by Opal. Sizes XS through L, in
+              almond, coffin, and square.
+            </p>
+          </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:justify-start">
               <p className="text-sm text-muted-foreground leading-5">

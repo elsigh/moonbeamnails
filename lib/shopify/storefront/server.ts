@@ -7,6 +7,8 @@ import {
 
 import { shopConfig } from "@/lib/config";
 import type { CommerceLocale } from "@/lib/config/types";
+import { isMockCatalog } from "@/lib/mock";
+import { createMockStorefrontClient } from "@/lib/mock/server";
 import { logShopifyDebug } from "@/lib/shopify/logging/server";
 import type { StorefrontRequestOptions, StorefrontVariables } from "@/lib/shopify/storefront/types";
 import type { ResultOf, StorefrontResponse } from "@/lib/shopify/types";
@@ -53,6 +55,8 @@ const customFetchApi: typeof fetch = async (input, init) => {
 export function createRequestStorefrontClient(
   requestContext: ReturnType<typeof createShopifyRequestContext>,
 ): StorefrontClient {
+  // Unset Shopify credentials answer from the preview catalog instead of the Storefront API.
+  if (isMockCatalog()) return createMockStorefrontClient(requestContext);
   return createStorefrontClient({
     config: {
       apiVersion: process.env.SHOPIFY_API_VERSION,

@@ -2,7 +2,9 @@ import type { ShopConfig } from "./types";
 
 const defaultUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : "http://localhost:3000";
+  : process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://moonbeamnails.com";
 
 export const shopConfig = {
   agent: {
@@ -67,8 +69,8 @@ export const shopConfig = {
   },
   site: {
     description:
-      "A Storefront Built on Vercel Shop. Agent-ready commerce, powered by Shopify, Next, and Eve.",
-    name: "Vercel Shop",
+      "Handmade press-on nails from Moonbeam Nails, painted in small batches by Opal. Sizes XS through L, in almond, coffin, and square.",
+    name: "Moonbeam Nails",
     url: defaultUrl,
   },
 } satisfies ShopConfig;

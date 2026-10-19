@@ -1,6 +1,7 @@
 import { PredictiveSearchProvider } from "@shopify/hydrogen/react";
 import { Suspense } from "react";
 
+import { Wordmark } from "@/components/brand/wordmark";
 import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { shopConfig } from "@/lib/config";
@@ -14,7 +15,8 @@ import { SearchModal } from "./search-modal";
 
 export function Nav() {
   const items: MenuItem[] = [
-    { id: "default-nav-shop", items: [], title: "Shop", url: "/collections/all" },
+    { id: "nav-shop", items: [], title: "Shop", url: "/collections/all" },
+    { id: "nav-collections", items: [], title: "Collections", url: "/collections" },
   ];
   return (
     <nav
@@ -24,8 +26,8 @@ export function Nav() {
       <Container className="flex h-16 items-center gap-2.5 md:gap-5">
         <MobileMenu items={items} />
 
-        <Link className="flex items-center shrink-0" href="/">
-          <span className="text-xl leading-4">{shopConfig.site.name}</span>
+        <Link className="flex shrink-0 items-center" href="/">
+          <Wordmark />
         </Link>
 
         <QuickLinks items={items} />

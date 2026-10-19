@@ -2,6 +2,7 @@ import { cn } from "cn";
 import Image from "next/image";
 import type { ComponentProps, ReactNode } from "react";
 
+import { NailSetArt } from "@/components/brand/nail-set";
 import { DiscountBadge } from "@/components/product/discount-badge";
 import { Price } from "@/components/product/price";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
@@ -35,6 +36,7 @@ interface ProductCardImageProps {
   children?: ReactNode;
   className?: string;
   height?: number;
+  illustration?: string;
   loading?: "eager" | "lazy";
   outOfStock?: boolean;
   outOfStockText?: string;
@@ -47,6 +49,7 @@ function ProductCardImage({
   children,
   className,
   height,
+  illustration,
   loading = "lazy",
   outOfStock = false,
   outOfStockText,
@@ -67,6 +70,8 @@ function ProductCardImage({
           loading={loading}
           sizes="100vw"
         />
+      ) : illustration ? (
+        <NailSetArt title={illustration} />
       ) : (
         <ImagePlaceholder className="size-full" />
       )}
@@ -98,7 +103,7 @@ function ProductCardTitle({ className, children, ...props }: ComponentProps<"h3"
   return (
     <h3
       data-slot="product-card-title"
-      className={cn("text-sm font-medium text-foreground line-clamp-1", className)}
+      className={cn("font-display text-base font-medium text-foreground line-clamp-1", className)}
       {...props}
     >
       {children}
