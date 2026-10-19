@@ -157,8 +157,9 @@ export async function fetchCollectionResults({
 }
 
 export async function getAllProductsCollection(): Promise<Collection> {
-  const title = "Products";
-  const description = "";
+  const title = "All sets";
+  const description =
+    "Every handmade press-on set, in sizes XS through L and almond, coffin, or square.";
   return {
     handle: ALL_PRODUCTS_HANDLE,
     title,
@@ -166,7 +167,7 @@ export async function getAllProductsCollection(): Promise<Collection> {
     image: null,
     path: `/collections/${ALL_PRODUCTS_HANDLE}`,
     seo: {
-      description: `Browse every product at ${shopConfig.site.name}: compare prices and check availability.`,
+      description: `Browse every press-on set at ${shopConfig.site.name}.`,
       title,
     },
   };

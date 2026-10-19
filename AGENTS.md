@@ -70,6 +70,7 @@ Read the installed Hydrogen README and bundled skills before changing an SDK int
 - `seedCartData` shares a per-request promise, not a data-cache entry. Keep carts out of public caches.
 - `prepareCheckoutAction` reads the confirmed checkout URL; it does not mutate the cart.
 - `lib/cart/types.ts` derives cart types from Hydrogen's handlers, the deliberate exception to domain types. Cart integration components may use Hydrogen store and form types; `components/ui/` may not.
+- When `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN`, `NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN`, and `NEXT_PUBLIC_SHOPIFY_SHOP_ID` are unset, `lib/mock/` answers Storefront reads and cart mutations with the Moonbeam Nails preview catalog. A connected store never enters that folder.
 
 ### Customer accounts
 

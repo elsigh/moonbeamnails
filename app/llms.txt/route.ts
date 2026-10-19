@@ -25,11 +25,13 @@ export async function GET(): Promise<Response> {
 
 > ${escapeMarkdown(summarizeText(description))}
 
+Moonbeam Nails is a small press-on studio. Sets are painted by hand and offered in sizes XS, S, M, and L and shapes almond, coffin, and square.
+
 Home, product, collection, and search pages return Markdown with an \`Accept: text/markdown\` header or at the page URL with \`.md\` appended (\`/index.md\` for the home page). Prices and availability use Shopify country \`${country}\` and language \`${language}\`.
 
 ## Buy for a shopper
 
-Catalog search, live availability, carts, and checkout come from Shopify through the Universal Commerce Protocol (UCP).
+When the storefront is connected to Shopify, catalog search, live availability, carts, and checkout come from Shopify through the Universal Commerce Protocol (UCP). A preview catalog without those credentials can be browsed on the pages below, and cart and checkout stay closed.
 
 - [UCP profile](${url}/.well-known/ucp): Supported UCP versions, capabilities, and payment handlers.
 - UCP MCP endpoint: \`POST ${url}/api/ucp/mcp\` with JSON-RPC; call \`tools/list\` for tools and schemas.

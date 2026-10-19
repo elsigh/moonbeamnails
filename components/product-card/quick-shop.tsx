@@ -6,14 +6,15 @@ import { PlusIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { NailSetArt } from "@/components/brand/nail-set";
 import { BuyButtons } from "@/components/product-detail/buy-buttons";
 import { ProductFormOptions, ProductFormPrice } from "@/components/product-detail/product-form";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Link } from "@/components/ui/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { shopConfig } from "@/lib/config";
+import { isMockCatalog } from "@/lib/mock";
 import { buildProductUrl } from "@/lib/product";
 import { loadQuickShopProductAction } from "@/lib/product/action";
 import { ProductProvider, useProduct } from "@/lib/product/client";
@@ -292,7 +293,7 @@ function QuickShopDetails({
         <div inert={isUnconfirmed || undefined}>
           <BuyButtons
             availableForSale={product.availableForSale}
-            buyWithShop={shopConfig.pdp.buyWithShop.isEnabled}
+            buyWithShop={shopConfig.pdp.buyWithShop.isEnabled && !isMockCatalog()}
             fallbackVariant={confirmedVariant}
             onAddToCart={onAddToCart}
             quantityPicker={shopConfig.pdp.quantityPicker.isEnabled}
@@ -317,7 +318,7 @@ function QuickShopLayout({ children, image, title }: QuickShopLayoutProps) {
         {image ? (
           <Image alt={title} className="object-cover" fill sizes="100vw" src={image} />
         ) : (
-          <ImagePlaceholder className="size-full" />
+          <NailSetArt title={title} />
         )}
       </div>
       {children}

@@ -9,7 +9,7 @@ import { buildAlternates, buildOpenGraph } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const title = "Collections";
-  const description = "Browse products by collection.";
+  const description = "Browse handmade press-on sets by collection.";
   return {
     title,
     description,

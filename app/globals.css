@@ -9,6 +9,7 @@
   --color-shop: #5A31F4;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces), var(--font-geist-sans), serif;
   --text-xxs: 0.625rem;
   /* Headings track tighter as they grow (Geist behavior); attaches to every text-* utility. */
   --text-lg--letter-spacing: -0.01em;
@@ -19,6 +20,37 @@
   --text-5xl--letter-spacing: -0.035em;
   --text-6xl--letter-spacing: -0.04em;
   --text-7xl--letter-spacing: -0.045em;
+
+  --animate-moon: moon-glow 6.5s ease-in-out infinite;
+  --animate-sheen: nail-sheen 7s ease-in-out infinite alternate;
+  --animate-twinkle: twinkle 3.8s ease-in-out infinite;
+
+  @keyframes moon-glow {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 0.9;
+    }
+  }
+  @keyframes nail-sheen {
+    from {
+      transform: translateX(-20%) rotate(12deg);
+    }
+    to {
+      transform: translateX(220%) rotate(12deg);
+    }
+  }
+  @keyframes twinkle {
+    0%,
+    100% {
+      opacity: 0.25;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
 
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -39,6 +71,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-lavender: #c9b6e4;
+  --color-pearl: #f6f3f8;
+  --color-silver: #d5deea;
+  --color-twilight: #141b30;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -46,28 +82,28 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: #ffffff;
-  --foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --primary: #000000;
-  --primary-foreground: #ffffff;
-  --secondary: #e9e9e9;
-  --secondary-foreground: #171717;
-  --muted: #e9e9e9;
-  --muted-foreground: #666666;
-  --accent: #efefef;
-  --accent-foreground: #171717;
-  --destructive: #cc0001;
-  --destructive-foreground: #f4f4f4;
-  --positive: #00ba5a;
-  --positive-foreground: #ffffff;
-  --border: #c8c8c8;
-  --input: #ececec;
-  --ring: #5a5a5a;
+  --radius: 0.875rem;
+  --background: #f6f3f8;
+  --foreground: #1b2438;
+  --card: #fffcfe;
+  --card-foreground: #1b2438;
+  --popover: #fffcfe;
+  --popover-foreground: #1b2438;
+  --primary: #243044;
+  --primary-foreground: #f6f3f8;
+  --secondary: #ece6f4;
+  --secondary-foreground: #1b2438;
+  --muted: #ebe6f1;
+  --muted-foreground: #3e4660;
+  --accent: #e7eef6;
+  --accent-foreground: #1b2438;
+  --destructive: #a33b55;
+  --destructive-foreground: #fff7f8;
+  --positive: #2f8f72;
+  --positive-foreground: #f4fffb;
+  --border: #ddd4e6;
+  --input: #f3eef6;
+  --ring: #8d7eb0;
 }
 
 @layer components {

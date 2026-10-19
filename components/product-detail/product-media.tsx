@@ -5,8 +5,8 @@ import Image, { getImageProps } from "next/image";
 import { type ReactNode, useEffect, useState } from "react";
 import { preload } from "react-dom";
 
+import { NailSetArt } from "@/components/brand/nail-set";
 import { AutoPlayVideo } from "@/components/ui/auto-play-video";
-import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import type { Image as ImageType, Video } from "@/lib/media/types";
 
 import { Lightbox, LightboxTrigger } from "./lightbox";
@@ -173,7 +173,7 @@ function Carousel({
               {item.type === "video" ? (
                 <MediaVideo item={item} priority={priority} />
               ) : item.type === "placeholder" ? (
-                <ImagePlaceholder className="size-full" />
+                <NailSetArt title={title} />
               ) : (
                 <MediaImage item={item} title={title} idx={idx} priority={priority} />
               )}
@@ -219,7 +219,7 @@ function GridItem({
       {item.type === "video" ? (
         <MediaVideo item={item} priority={priority} />
       ) : item.type === "placeholder" ? (
-        <ImagePlaceholder className="size-full" />
+        <NailSetArt title={title} />
       ) : (
         <LightboxTrigger image={item.image}>
           <MediaImage item={item} title={title} idx={idx} priority={priority} />

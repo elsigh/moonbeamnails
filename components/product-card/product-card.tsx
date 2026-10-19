@@ -29,7 +29,9 @@ export function ProductCard({ loading, outOfStockText, product, quickShopText }:
         <ProductCardImage
           src={product.featuredImage?.url}
           alt={product.featuredImage?.altText || product.title}
+          className="rounded-xl"
           height={product.featuredImage?.height}
+          illustration={product.title}
           loading={loading}
           outOfStock={!product.availableForSale}
           outOfStockText={outOfStockText}
