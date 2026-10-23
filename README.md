@@ -1,6 +1,6 @@
 # Moonbeam Nails
 
-The storefront for [Moonbeam Nails](https://moonbeamnails.com), a handmade press-on nail studio. Opal paints the sets. Lindsey, her parent, owns the accounts. The shop is a [Vercel Shop](https://vercel.shop) storefront: Next.js for the site, Shopify for commerce once a store is connected.
+The storefront for [Moonbeam Nails](https://moonbeamnails.com), a handmade press-on nail studio. Opal paints the sets. The shop is a [Vercel Shop](https://vercel.shop) storefront: Next.js for the site, Shopify for commerce once a store is connected.
 
 You can run the whole catalog before that store exists. With the Shopify variables unset, the site serves a preview catalog of press-on sets from `lib/mock/`. Setting the variables switches every catalog, cart, and checkout call to Shopify. No code change is required, and the preview folder is unused after that.
 

@@ -8,10 +8,9 @@ import { Container } from "@/components/ui/container";
 import { Link } from "@/components/ui/link";
 import { Page } from "@/components/ui/page";
 import { Sections } from "@/components/ui/sections";
-import { getCollectionResults } from "@/lib/collections/server";
+import { getAllProductsResults } from "@/lib/collections/server";
 import { shopConfig } from "@/lib/config";
 import { isMockCatalog } from "@/lib/mock";
-import { getSearchIndexProducts } from "@/lib/product/server";
 import { buildAlternates, buildOpenGraph } from "@/lib/seo";
 
 const SIZES = [
@@ -50,8 +49,8 @@ export default function HomePage() {
         <Hero />
         <Container>
           <div className="grid gap-10">
-            <Suspense fallback={<ProductsGridSkeleton count={4} />}>
-              <CelestialSets />
+            <Suspense fallback={<ProductsGridSkeleton count={8} />}>
+              <FeaturedSets />
             </Suspense>
             <Sizing />
             <MadeByOpal />
@@ -62,24 +61,18 @@ export default function HomePage() {
   );
 }
 
-async function CelestialSets() {
-  const celestial = await getCollectionResults({ handle: "celestial" });
-  const featured = celestial.products.length > 0;
-  const products = featured
-    ? celestial.products.slice(0, 4)
-    : (await getSearchIndexProducts({ limit: 4 })).products;
+async function FeaturedSets() {
+  const { products } = await getAllProductsResults();
   if (products.length === 0) return null;
-  const href = featured ? "/collections/celestial" : "/collections/all";
-  const title = featured ? "Celestial Collection" : "The sets";
   return (
     <div className="grid gap-4">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="font-display text-3xl sm:text-4xl">{title}</h2>
+        <h2 className="font-display text-3xl sm:text-4xl">The sets</h2>
         <Link
-          href={href}
+          href="/collections/all"
           className="cursor-pointer text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          View all
+          Shop all
         </Link>
       </div>
       {isMockCatalog() ? (
@@ -146,13 +139,12 @@ function MadeByOpal() {
       <h2 className="font-display text-3xl sm:text-4xl">Made by Opal</h2>
       <div className="grid gap-4 text-sm leading-6 text-muted-foreground">
         <p>
-          Opal paints every Moonbeam Nails set by hand, in a small batch. She is twelve. The
-          crescents, stars, and pearl washes are brushed on, then sealed so they stay smooth under a
-          clear top coat.
+          Opal paints every Moonbeam Nails set by hand, in a small batch. The crescents, stars, and
+          pearl washes are brushed on, then sealed so they stay smooth under a clear top coat.
         </p>
         <p>
-          Press them on at home with glue or tabs. Lindsey, Opal's parent, looks after the shop and
-          the mailbox. When the studio is connected to Shopify, checkout opens on these same pages.
+          Press them on at home with glue or tabs. When the studio is connected to Shopify, checkout
+          opens on these same pages.
         </p>
       </div>
     </section>

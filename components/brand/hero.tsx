@@ -49,10 +49,10 @@ export function Hero() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2.5 md:justify-start">
             <Link
-              href="/collections/celestial"
+              href="/collections/all"
               className="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg bg-pearl px-5 text-sm font-medium text-twilight transition-colors hover:bg-white"
             >
-              Shop the Celestial Collection
+              Shop all
             </Link>
             <Link
               href="/#sizing"

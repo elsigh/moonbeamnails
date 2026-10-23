@@ -18,8 +18,7 @@ export async function Footer() {
     {
       id: "footer-shop",
       items: [
-        { id: "footer-celestial", items: [], title: "Celestial", url: "/collections/celestial" },
-        { id: "footer-all", items: [], title: "All sets", url: "/collections/all" },
+        { id: "footer-all", items: [], title: "Shop all", url: "/collections/all" },
         { id: "footer-collections", items: [], title: "Collections", url: "/collections" },
       ],
       title: "Shop",
