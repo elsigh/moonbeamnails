@@ -56,6 +56,7 @@ async function buildProductMetadata(handle: string, canonicalPath: string): Prom
 }
 
 export async function generateStaticParams() {
+  // Handles missing here still render on request. cacheComponents rejects a dynamicParams export.
   try {
     const handles = await getProductHandles();
     return handles.length > 0
