@@ -10,7 +10,7 @@ import type { BrowseState, Collection, SortValue } from "@/lib/collections/types
 import { shopConfig } from "@/lib/config";
 import { summarizeText } from "@/lib/content";
 
-export const PRODUCTS_PER_PAGE = 40;
+export const PRODUCTS_PER_PAGE = 48;
 
 export function describeCollection(collection: Collection): string {
   return (

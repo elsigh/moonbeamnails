@@ -4,6 +4,7 @@ import { PRODUCTS_PER_PAGE, resolveBrowseParams } from "@/lib/collections";
 import type { BrowseSource } from "@/lib/collections/types";
 import type { ProductPage } from "@/lib/product/types";
 import {
+  fetchCatalogProducts,
   fetchCollectionProducts,
   fetchSearchIndexProducts,
 } from "@/lib/shopify/operations/products/server";
@@ -19,6 +20,7 @@ export async function loadMoreBrowseProductsAction({
 }): Promise<ProductPage> {
   const { filters, sort } = resolveBrowseParams(search);
   const page = { cursor, filters, limit: PRODUCTS_PER_PAGE, sortKey: sort };
+  if (source.type === "catalog") return fetchCatalogProducts(page);
   if (source.type === "search") {
     // Storefront `search` cursor is anchored to the original `first`; using a different page size returns count=0.
     return fetchSearchIndexProducts({ ...page, query: source.query });

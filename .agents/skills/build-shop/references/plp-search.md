@@ -32,7 +32,7 @@ Collections and `/search` share the same Hydrogen collection store. `CollectionB
 - Search mounts the store with `handle={\`search:${q}\`}` so a new term rebuilds state and drops stale filters. `q` and `collection` are not store-owned, so the reconciler preserves them across filter and sort changes.
 - Search only sorts by relevance and price. Pass `SEARCH_SORT_EXCLUDE` to `CollectionsSortSelect`; no `sort_by` means `RELEVANCE`.
 - Filter links and active-filter badges render real `href`s built with `serializeCollectionParams` and `getFilterRemovalUrl`, then `preventDefault` into the store action so no-JS navigation still works.
-- Collection pages render `BrowseResults` through `CollectionResults`, and `/search` through `Browse`, which also mounts its own store and toolbar. The results' `source` names the Storefront backend: collection products for `/collections/[handle]`, the search index for `/search` and `/collections/all`. Cursors are only valid for the backend that issued them.
+- Collection pages render `BrowseResults` through `CollectionResults`, and `/search` through `Browse`, which also mounts its own store and toolbar. The results' `source` names the Storefront backend: collection products for `/collections/[handle]`, the products connection for the default `/collections/all` page, and the search index for `/search` and for a filtered or sorted `/collections/all`. Cursors are only valid for the backend that issued them.
 - `InfiniteProductGrid` serializes the current store state into `search` on every load-more call. `loadMoreBrowseProductsAction` accepts `{ cursor, search, source }` rather than a frozen filter snapshot.
 
 ## Results and controls

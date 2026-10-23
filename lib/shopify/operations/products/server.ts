@@ -3,6 +3,7 @@ import type { ProductFilter } from "@shopify/hydrogen";
 import type {
   ProductCollectionSortKeys,
   ProductRecommendationIntent,
+  ProductSortKeys,
   SearchSortKeys,
 } from "@shopify/hydrogen/storefront-api-types";
 
@@ -285,6 +286,52 @@ export async function fetchProductsByIds({
   return data.nodes
     .flatMap((node) => (node?.__typename === "Product" ? [node] : []))
     .map(transformShopifyProductCard);
+}
+
+const CATALOG_PRODUCTS_QUERY = gql(
+  `#graphql
+  query catalogProducts($first: Int!, $after: String, $sortKey: ProductSortKeys, $reverse: Boolean, $country: CountryCode, $language: LanguageCode) @inContext(country: $country, language: $language) {
+    products(first: $first, after: $after, sortKey: $sortKey, reverse: $reverse) {
+      edges {
+        cursor
+        node {
+          ...FilterableProductCardFields
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+`,
+  [FILTERABLE_PRODUCT_CARD_FRAGMENT],
+);
+
+// The products connection is every product published to this storefront. Search can omit a product that is published to Headless and not yet in the search index.
+export async function fetchCatalogProducts(params: {
+  cursor?: string;
+  limit?: number;
+  locale?: CommerceLocale;
+}): Promise<ProductPage> {
+  const { cursor, limit = 48, locale = shopConfig.localization } = params;
+  const response = await storefront.request(CATALOG_PRODUCTS_QUERY, {
+    locale,
+    variables: {
+      after: cursor,
+      first: limit,
+      reverse: false,
+      sortKey: "TITLE" satisfies ProductSortKeys,
+    },
+  });
+  assertStorefrontOk(response, "catalogProducts");
+  const { data } = response;
+  return {
+    pageInfo: data.products.pageInfo,
+    products: data.products.edges.map((edge) => transformFilteredShopifyProductCard(edge.node)),
+  };
 }
 
 // Storefront search sorts by RELEVANCE or PRICE only.

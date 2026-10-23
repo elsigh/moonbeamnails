@@ -18,6 +18,7 @@ import {
   fetchCollectionsListing,
 } from "@/lib/shopify/operations/collections/server";
 import {
+  fetchCatalogProducts,
   fetchCollectionProducts,
   fetchSearchFacets,
   fetchSearchIndexProducts,
@@ -124,12 +125,27 @@ export async function getAllProductsResults(
   cacheLife("minutes");
   cacheTag("products-index");
 
-  const [{ pageInfo, products }, { facets, total }] = await Promise.all([
-    fetchSearchIndexProducts({ limit: PRODUCTS_PER_PAGE, locale: params.locale }),
+  const [{ pageInfo, products }, { facets }] = await Promise.all([
+    fetchCatalogProducts({ limit: PRODUCTS_PER_PAGE, locale: params.locale }),
     fetchSearchFacets({ locale: params.locale }),
   ]);
   tagProducts(products);
-  return { dataSearch: "", facets, pageInfo, products, source: { type: "search" }, total };
+  let total = products.length;
+  let cursor = pageInfo.endCursor;
+  let hasNextPage = pageInfo.hasNextPage;
+  while (hasNextPage && cursor) {
+    const next = await fetchCatalogProducts({
+      cursor,
+      limit: 250,
+      locale: params.locale,
+    });
+    if (next.products.length === 0 || next.pageInfo.endCursor === cursor) break;
+    total += next.products.length;
+    tagProducts(next.products);
+    cursor = next.pageInfo.endCursor;
+    hasNextPage = next.pageInfo.hasNextPage;
+  }
+  return { dataSearch: "", facets, pageInfo, products, source: { type: "catalog" }, total };
 }
 
 // Filtered and sorted views stay live; a cache entry per combination would rarely be reused.
@@ -158,8 +174,7 @@ export async function fetchCollectionResults({
 
 export async function getAllProductsCollection(): Promise<Collection> {
   const title = "All sets";
-  const description =
-    "Every handmade press-on set, in sizes XS through L and almond, coffin, or square.";
+  const description = "Every handmade press-on set. Each set lists the sizes you can order.";
   return {
     handle: ALL_PRODUCTS_HANDLE,
     title,

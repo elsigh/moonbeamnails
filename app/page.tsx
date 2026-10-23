@@ -20,12 +20,6 @@ const SIZES = [
   { body: "A longer nail bed or a wider finger.", name: "L" },
 ];
 
-const SHAPES = [
-  { body: "A soft taper with a rounded tip.", name: "Almond" },
-  { body: "Straight sides that taper at the end.", name: "Coffin" },
-  { body: "A flat tip with even sides.", name: "Square" },
-];
-
 export async function generateMetadata(): Promise<Metadata> {
   const title = "Handmade press-on nails";
   const description = shopConfig.site.description;
@@ -62,8 +56,9 @@ export default function HomePage() {
 }
 
 async function FeaturedSets() {
-  const { products } = await getAllProductsResults();
+  const { products, total } = await getAllProductsResults();
   if (products.length === 0) return null;
+  const count = total ?? products.length;
   return (
     <div className="grid gap-4">
       <div className="flex items-center justify-between gap-4">
@@ -72,7 +67,7 @@ async function FeaturedSets() {
           href="/collections/all"
           className="cursor-pointer text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          Shop all
+          {`Shop all (${count})`}
         </Link>
       </div>
       {isMockCatalog() ? (
@@ -101,33 +96,20 @@ function Sizing() {
       <div className="grid gap-2.5">
         <h2 className="font-display text-3xl sm:text-4xl">How sizing works</h2>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Every set is the same artwork in four lengths and three shapes. Pick the length that
-          covers the nail bed, then the silhouette you want to wear.
+          The size chart runs from XS to L. A set may be offered in one of those sizes or in
+          several. The sizes you can order are listed on that set.
         </p>
       </div>
-      <div className="grid gap-5 md:grid-cols-2">
-        <div className="grid gap-4 rounded-xl bg-secondary p-5">
-          <h3 className="font-display text-2xl">Sizes</h3>
-          <ul className="grid gap-4">
-            {SIZES.map((size) => (
-              <li key={size.name} className="grid grid-cols-[3rem_1fr] gap-4">
-                <span className="font-display text-xl text-foreground">{size.name}</span>
-                <span className="text-sm text-muted-foreground">{size.body}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="grid gap-4 rounded-xl bg-accent p-5">
-          <h3 className="font-display text-2xl">Shapes</h3>
-          <ul className="grid gap-4">
-            {SHAPES.map((shape) => (
-              <li key={shape.name} className="grid gap-1">
-                <span className="font-display text-xl">{shape.name}</span>
-                <span className="text-sm text-muted-foreground">{shape.body}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className="grid gap-4 rounded-xl bg-secondary p-5">
+        <h3 className="font-display text-2xl">Size chart</h3>
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {SIZES.map((size) => (
+            <li key={size.name} className="grid grid-cols-[3rem_1fr] gap-4">
+              <span className="font-display text-xl text-foreground">{size.name}</span>
+              <span className="text-sm text-muted-foreground">{size.body}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
