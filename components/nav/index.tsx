@@ -15,7 +15,7 @@ import { SearchModal } from "./search-modal";
 
 export function Nav() {
   const items: MenuItem[] = [
-    { id: "nav-shop", items: [], title: "Shop", url: "/collections/all" },
+    { id: "nav-shop", items: [], title: "Shop all", url: "/collections/all" },
     { id: "nav-collections", items: [], title: "Collections", url: "/collections" },
   ];
   return (

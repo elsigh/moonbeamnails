@@ -78,16 +78,7 @@ const PRODUCT_INPUTS: MockProductInput[] = [
 
 const COLLECTIONS: MockCollection[] = [
   {
-    description:
-      "Night-sky sets in pearl, opal, lavender, and twilight navy. Each one is painted by hand.",
-    handle: "celestial",
-    id: 3001,
-    productHandles: ["moonbeam-glow", "opal-shimmer", "starlit-night", "lavender-dream"],
-    title: "Celestial",
-  },
-  {
-    description:
-      "The softer sets: lilac and iridescent pearl for days that do not need a night sky.",
+    description: "Lilac and iridescent pearl, painted by hand.",
     handle: "lavender",
     id: 3002,
     productHandles: ["lavender-dream", "opal-shimmer"],
@@ -107,7 +98,7 @@ const POLICIES = [
     title: "Returns",
   },
   {
-    body: "<p>Moonbeam Nails keeps only what a shop needs to send an order: a name, an address, and an email. Lindsey, Opal’s parent, looks after the accounts and the mailbox.</p><p>The preview catalog on this site does not store a cart on Shopify.</p>",
+    body: "<p>Moonbeam Nails keeps only what a shop needs to send an order: a name, an address, and an email.</p><p>The preview catalog on this site does not store a cart on Shopify.</p>",
     handle: "privacy-policy",
     title: "Privacy",
   },
