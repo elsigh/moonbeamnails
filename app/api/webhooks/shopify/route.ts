@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { getNumericShopifyId } from "@/lib/shopify/id/server";
 
@@ -13,6 +13,60 @@ function verifyWebhook(body: string, hmacHeader: string | null, secret: string):
   const received = Buffer.from(hmacHeader, "base64");
 
   return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+}
+
+function readPayload(body: string): Record<string, unknown> | undefined {
+  try {
+    const payload = JSON.parse(body);
+    return payload && typeof payload === "object" ? payload : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function stringField(
+  payload: Record<string, unknown> | undefined,
+  key: string,
+): string | undefined {
+  const value = payload?.[key];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function productIdTag(payload: Record<string, unknown> | undefined): string | undefined {
+  const graphqlId = stringField(payload, "admin_graphql_api_id");
+  if (graphqlId) {
+    const numericId = getNumericShopifyId(graphqlId);
+    return numericId ? `product-${numericId}` : undefined;
+  }
+  const id = payload?.id;
+  if (typeof id === "number" || typeof id === "string") return `product-${id}`;
+  return undefined;
+}
+
+function invalidateTags(tags: string[]): string[] {
+  const unique = [...new Set(tags)];
+  for (const tag of unique) {
+    revalidateTag(tag, { expire: 0 });
+  }
+  return unique;
+}
+
+function invalidatePaths(paths: Array<string | [string, "page"]>): string[] {
+  const unique = new Map<string, string | [string, "page"]>();
+  for (const path of paths) {
+    unique.set(Array.isArray(path) ? `${path[0]}:${path[1]}` : path, path);
+  }
+  const invalidated: string[] = [];
+  for (const path of unique.values()) {
+    if (Array.isArray(path)) {
+      revalidatePath(path[0], path[1]);
+      invalidated.push(path[0]);
+    } else {
+      revalidatePath(path);
+      invalidated.push(path);
+    }
+  }
+  return invalidated;
 }
 
 export async function POST(request: Request) {
@@ -31,85 +85,74 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing topic header" }, { status: 400 });
   }
 
-  const tagsInvalidated: string[] = [];
+  const payload = readPayload(body);
+  const tags: string[] = [];
+  const paths: Array<string | [string, "page"]> = [];
 
   if (topic.startsWith("products/")) {
-    // Product tags cascade through every surface without purging the full catalog.
-    const productTags: string[] = [];
+    // Publishing a draft is an update, and that product is not yet on the cached list.
+    tags.push("products-index");
+    paths.push("/", "/collections/all", "/sitemap.xml");
 
-    if (topic === "products/create" || topic === "products/delete") {
-      productTags.push("products-index");
-    }
-
-    try {
-      const payload = JSON.parse(body);
-      if (payload.handle) {
-        productTags.push(`product-${payload.handle}`);
-        productTags.push(`recommendations-${payload.handle}`);
+    if (!payload) {
+      console.error("[Shopify Webhook] Could not parse products payload");
+      tags.push("products");
+      paths.push(["/products/[handle]", "page"]);
+    } else {
+      const handle = stringField(payload, "handle");
+      const idTag = productIdTag(payload);
+      if (handle) {
+        tags.push(`product-${handle}`, `recommendations-${handle}`);
+        paths.push(`/products/${handle}`);
+      } else {
+        // products/delete identifies the product by id, so every product route refreshes on its next visit.
+        paths.push(["/products/[handle]", "page"]);
       }
-      if (payload.admin_graphql_api_id) {
-        const numericId = getNumericShopifyId(payload.admin_graphql_api_id);
-        if (numericId) {
-          productTags.push(`product-${numericId}`);
-        }
-      } else if (payload.id) {
-        productTags.push(`product-${payload.id}`);
-      }
-    } catch {
-      console.error("[Shopify Webhook] Could not parse products payload; no tags invalidated");
-    }
-
-    for (const tag of productTags) {
-      revalidateTag(tag, { expire: 0 });
-      tagsInvalidated.push(tag);
+      if (idTag) tags.push(idTag);
+      if (!handle && !idTag) tags.push("products");
     }
   }
 
   if (topic.startsWith("collections/")) {
-    // Create/delete also invalidate the collection index; the broad tag is break-glass only.
-    const collectionTags: string[] = [];
+    tags.push("collections-index");
+    paths.push("/collections", "/sitemap.xml");
 
-    if (topic === "collections/create" || topic === "collections/delete") {
-      collectionTags.push("collections-index");
-    }
-
-    try {
-      const payload = JSON.parse(body);
-      if (payload.handle) {
-        collectionTags.push(`collection-${payload.handle}`);
-      }
-    } catch {
+    if (!payload) {
       console.error("[Shopify Webhook] Could not parse collections payload");
+      tags.push("collections");
+      paths.push(["/collections/[handle]", "page"]);
+    } else {
+      const handle = stringField(payload, "handle");
+      if (handle) {
+        tags.push(`collection-${handle}`);
+        paths.push(`/collections/${handle}`);
+      } else {
+        tags.push("collections");
+        paths.push(["/collections/[handle]", "page"]);
+      }
     }
+  }
 
-    for (const tag of collectionTags) {
-      revalidateTag(tag, { expire: 0 });
-      tagsInvalidated.push(tag);
-    }
+  if (topic === "inventory_levels/update") {
+    // The payload names an inventory item, not a product, so sold-out state refreshes through the catalog tags.
+    tags.push("products", "products-index");
+    paths.push("/", "/collections/all", "/sitemap.xml", ["/products/[handle]", "page"]);
   }
 
   if (topic.startsWith("metaobjects/")) {
-    // Metaobjects are low-cardinality, so fire the broad tag too (unlike catalog) — aggregate reads refresh without per-type index tags.
-    const metaobjectTags = ["metaobjects"];
-
-    try {
-      const payload = JSON.parse(body);
-      if (payload.handle) {
-        metaobjectTags.push(`metaobject-${payload.handle}`);
-      }
-    } catch {
-      console.error("[Shopify Webhook] Could not parse metaobjects payload");
-    }
-
-    for (const tag of metaobjectTags) {
-      revalidateTag(tag, { expire: 0 });
-      tagsInvalidated.push(tag);
-    }
+    tags.push("metaobjects");
+    const handle = stringField(payload, "handle");
+    if (handle) tags.push(`metaobject-${handle}`);
+    if (!payload) console.error("[Shopify Webhook] Could not parse metaobjects payload");
   }
+
+  const tagsInvalidated = tags.length > 0 ? invalidateTags(tags) : [];
+  const pathsInvalidated = paths.length > 0 ? invalidatePaths(paths) : [];
 
   return Response.json({
     success: true,
     topic,
     tagsInvalidated,
+    pathsInvalidated,
   });
 }
