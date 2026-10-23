@@ -1,7 +1,7 @@
 import { cn } from "cn";
-import { MinusIcon, PlusIcon } from "lucide-react";
 import { type ReactNode, Suspense } from "react";
 
+import { ProductViewedTracker } from "@/components/analytics/trackers";
 import { BundleComponents, BundleParents } from "@/components/product-detail/bundle-components";
 import { BuyButtons, PurchaseOptions } from "@/components/product-detail/buy-buttons";
 import { BuyWithShopLogo } from "@/components/product-detail/buy-with-shop-logo";
@@ -32,24 +32,32 @@ import { Textarea } from "@/components/ui/textarea";
 import { shopConfig } from "@/lib/config";
 import { isMockCatalog, MOCK_CHECKOUT_MESSAGE } from "@/lib/mock";
 import {
+  defaultSelectedOptions,
   getProductPurchaseOptions,
   getSelectedColorImage,
   getSharedImages,
   hasColorImagePartitioning,
+  parseSelectedOptions,
   toProductFormInput,
+  toSelectedOptionList,
   toStaticOptionGroups,
 } from "@/lib/product";
-import { type SelectedOptions } from "@/lib/product/types";
-import type { ProductDetails, ProductVariant } from "@/lib/product/types";
+import { getProduct } from "@/lib/product/server";
+import type { ProductDetails, ProductVariant, SelectedOptions } from "@/lib/product/types";
+import { fetchProductVariant } from "@/lib/shopify/operations/products/server";
+
+type ProductSearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export function ProductDetailSection({
+  colorCarousel,
+  colorGrid,
   product,
-  selectedOptionsPromise,
-  variantPromise,
+  purchase,
 }: {
+  colorCarousel: ReactNode;
+  colorGrid: ReactNode;
   product: ProductDetails;
-  selectedOptionsPromise: Promise<SelectedOptions>;
-  variantPromise: Promise<ProductVariant | undefined>;
+  purchase: ReactNode;
 }) {
   return (
     <>
@@ -78,19 +86,21 @@ export function ProductDetailSection({
         ]}
       />
       <div className="grid gap-10 lg:grid-cols-10 lg:items-start lg:gap-5">
-        <ProductMediaArea product={product} selectedOptionsPromise={selectedOptionsPromise} />
-        <ProductInfoArea product={product} variantPromise={variantPromise} />
+        <ProductMediaArea colorCarousel={colorCarousel} colorGrid={colorGrid} product={product} />
+        <ProductInfoArea product={product} purchase={purchase} />
       </div>
     </>
   );
 }
 
 function ProductMediaArea({
+  colorCarousel,
+  colorGrid,
   product,
-  selectedOptionsPromise,
 }: {
+  colorCarousel: ReactNode;
+  colorGrid: ReactNode;
   product: ProductDetails;
-  selectedOptionsPromise: Promise<SelectedOptions>;
 }) {
   if (!hasColorImagePartitioning(product.options)) {
     return (
@@ -111,66 +121,71 @@ function ProductMediaArea({
       className="lg:col-span-6"
       desktopSlot={
         // Color image is the LCP slot; a pulsing skeleton flashes harder than an empty image canvas.
-        <Suspense fallback={<div className="aspect-square w-full" />}>
-          <ResolvedColorImageGrid
-            product={product}
-            selectedOptionsPromise={selectedOptionsPromise}
-          />
-        </Suspense>
+        <Suspense fallback={<div className="aspect-[4/5] w-full" />}>{colorGrid}</Suspense>
       }
       mobileSlot={
         <Suspense
           fallback={
-            <div className="relative shrink-0 w-full snap-start snap-always overflow-hidden aspect-square" />
+            <div className="relative aspect-[4/5] w-full shrink-0 snap-start snap-always overflow-hidden" />
           }
         >
-          <ResolvedColorImageCarousel
-            product={product}
-            selectedOptionsPromise={selectedOptionsPromise}
-          />
+          {colorCarousel}
         </Suspense>
       }
     />
   );
 }
 
-async function ResolvedColorImageGrid({
-  product,
-  selectedOptionsPromise,
+export async function ProductColorGrid({
+  params,
+  searchParams,
 }: {
-  product: ProductDetails;
-  selectedOptionsPromise: Promise<SelectedOptions>;
+  params: Promise<{ handle: string }>;
+  searchParams: ProductSearchParams;
 }) {
-  const image = getSelectedColorImage(product, await selectedOptionsPromise);
+  const product = await productForMedia(params);
+  if (!product) return null;
+  const image = getSelectedColorImage(product, await selectedOptionsFor(product, searchParams));
   if (!image) return null;
   return <ColorImageGrid images={[image]} title={product.title} />;
 }
 
-async function ResolvedColorImageCarousel({
-  product,
-  selectedOptionsPromise,
+export async function ProductColorCarousel({
+  params,
+  searchParams,
 }: {
-  product: ProductDetails;
-  selectedOptionsPromise: Promise<SelectedOptions>;
+  params: Promise<{ handle: string }>;
+  searchParams: ProductSearchParams;
 }) {
-  const image = getSelectedColorImage(product, await selectedOptionsPromise);
+  const product = await productForMedia(params);
+  if (!product) return null;
+  const image = getSelectedColorImage(product, await selectedOptionsFor(product, searchParams));
   if (!image) return null;
   return <ColorImageCarouselItems images={[image]} title={product.title} />;
 }
 
-function ProductInfoArea({
-  product,
-  variantPromise,
-}: {
-  product: ProductDetails;
-  variantPromise: Promise<ProductVariant | undefined>;
-}) {
-  const { options, handle, descriptionHtml } = product;
-  const uniformStock = product.allVariantsInStock;
-  const singleVariant = product.variantsCount === 1;
-  const showBuyLabel = uniformStock && !singleVariant;
-  const allInStock = product.defaultVariant?.availableForSale ?? product.availableForSale;
-  const hasOptions = options.some((option) => option.values.length > 1);
+async function productForMedia(
+  params: Promise<{ handle: string }>,
+): Promise<ProductDetails | null> {
+  const { handle } = await params;
+  const product = await getProduct({ handle });
+  if (!product || !hasColorImagePartitioning(product.options)) return null;
+  return product;
+}
+
+async function selectedOptionsFor(
+  product: ProductDetails,
+  searchParams: ProductSearchParams,
+): Promise<SelectedOptions> {
+  const resolved = (await searchParams) ?? {};
+  return {
+    ...defaultSelectedOptions(product),
+    ...parseSelectedOptions(product.options, resolved),
+  };
+}
+
+function ProductInfoArea({ product, purchase }: { product: ProductDetails; purchase: ReactNode }) {
+  const { descriptionHtml, handle } = product;
   return (
     <div className="grid gap-10 lg:sticky lg:top-20 lg:col-span-4">
       <div
@@ -187,33 +202,8 @@ function ProductInfoArea({
             />
           ) : null}
         </div>
-
-        {singleVariant ? (
-          <ProductInfoContent
-            priceSlot={
-              !product.hasUniformPricing ? (
-                <Suspense fallback={<div className="h-7" aria-hidden />}>
-                  <ResolvedProductPrice variantPromise={variantPromise} />
-                </Suspense>
-              ) : undefined
-            }
-            product={product}
-            selectedVariant={product.defaultVariant}
-          />
-        ) : (
-          <Suspense
-            fallback={
-              <ProductInfoFallback
-                allInStock={allInStock}
-                hasOptions={hasOptions}
-                product={product}
-                showLabel={showBuyLabel}
-              />
-            }
-          >
-            <ResolvedProductInfo product={product} variantPromise={variantPromise} />
-          </Suspense>
-        )}
+        <ProductInfoOptions include="single" options={toStaticOptionGroups(product)} />
+        <Suspense fallback={<PurchaseFallback product={product} />}>{purchase}</Suspense>
       </div>
 
       {!product.isGiftCard && shopConfig.pdp.bundles.isEnabled ? (
@@ -221,7 +211,9 @@ function ProductInfoArea({
       ) : null}
 
       {!product.isGiftCard && shopConfig.pdp.complementaryProducts.isEnabled ? (
-        <ComplementaryProducts handle={handle} limit={4} title="Pairs Well With" />
+        <Suspense fallback={null}>
+          <ComplementaryProducts handle={handle} limit={4} title="Pairs Well With" />
+        </Suspense>
       ) : null}
 
       <ProductInfoDescription descriptionHtml={descriptionHtml} />
@@ -229,54 +221,67 @@ function ProductInfoArea({
   );
 }
 
-async function ResolvedProductPrice({
-  variantPromise,
+export async function ProductPurchase({
+  params,
+  searchParams,
 }: {
-  variantPromise: Promise<ProductVariant | undefined>;
+  params: Promise<{ handle: string }>;
+  searchParams: ProductSearchParams;
 }) {
-  const variant = await variantPromise;
+  const { handle } = await params;
+  const product = await getProduct({ handle });
+  if (!product) return null;
+  const resolved = (await searchParams) ?? {};
+  const urlOptions = parseSelectedOptions(product.options, resolved);
+  const variant =
+    Object.keys(urlOptions).length === 0
+      ? product.defaultVariant
+      : // Uncached: a URL-selected variant's price and stock are read live, and caching each combination multiplies entries by variant count.
+        await fetchProductVariant({
+          handle: product.handle,
+          selectedOptions: toSelectedOptionList({
+            ...defaultSelectedOptions(product),
+            ...urlOptions,
+          }),
+        });
   return (
-    <ProductFormPrice
-      fallbackVariant={
-        variant ? { compareAtPrice: variant.compareAtPrice, price: variant.price } : undefined
-      }
-    />
+    <>
+      <Suspense fallback={null}>
+        <ProductViewedTracker
+          product={{
+            handle: product.handle,
+            id: product.id,
+            title: product.title,
+            vendor: product.vendor,
+          }}
+          variantPromise={Promise.resolve(variant)}
+        />
+      </Suspense>
+      <ProductInfoContent product={product} selectedVariant={variant} />
+    </>
   );
-}
-
-async function ResolvedProductInfo({
-  product,
-  variantPromise,
-}: {
-  product: ProductDetails;
-  variantPromise: Promise<ProductVariant | undefined>;
-}) {
-  return <ProductInfoContent product={product} selectedVariant={await variantPromise} />;
 }
 
 // The store is seeded from the URL-resolved variant so server HTML and client state agree on first paint.
 function ProductInfoContent({
-  priceSlot,
   product,
   selectedVariant,
 }: {
-  priceSlot?: ReactNode;
   product: ProductDetails;
   selectedVariant: ProductVariant | undefined;
 }) {
   const formProduct = toProductFormInput(product, selectedVariant);
   const fallbackVariant = formProduct.selectedOrFirstAvailableVariant ?? undefined;
-  const hasOptions = product.options.some((option) => option.values.length > 1);
 
   return (
     <ProductForm product={formProduct}>
       <div className="grid gap-10">
         {!product.hasUniformPricing ? (
           <div data-slot="product-info-price">
-            {priceSlot ?? <ProductFormPrice fallbackVariant={fallbackVariant} />}
+            <ProductFormPrice fallbackVariant={fallbackVariant} />
           </div>
         ) : null}
-        {hasOptions ? <ProductFormOptions handle={product.handle} /> : null}
+        <ProductFormOptions handle={product.handle} />
         {product.isGiftCard ? (
           <GiftCardPurchaseForm />
         ) : (
@@ -293,29 +298,20 @@ function ProductInfoContent({
   );
 }
 
-function ProductInfoFallback({
-  showLabel,
-  allInStock,
-  hasOptions,
-  product,
-}: {
-  allInStock: boolean;
-  hasOptions: boolean;
-  product: ProductDetails;
-  showLabel: boolean;
-}) {
+function PurchaseFallback({ product }: { product: ProductDetails }) {
+  const hasChoices = product.options.some((option) => option.values.length > 1);
   return (
     <div className="grid gap-10">
       {!product.hasUniformPricing ? <div className="h-7" aria-hidden /> : null}
-      {hasOptions ? (
-        <ProductInfoOptions options={toStaticOptionGroups(product)} hideImages />
+      {hasChoices ? (
+        <ProductInfoOptions include="choices" options={toStaticOptionGroups(product)} hideImages />
       ) : null}
       {product.isGiftCard ? (
         <GiftCardPurchaseFormFallback />
       ) : (
         <BuyButtonsFallback
-          allInStock={allInStock}
-          showLabel={showLabel}
+          allInStock={product.defaultVariant?.availableForSale ?? product.availableForSale}
+          showLabel
           variant={product.defaultVariant}
         />
       )}
@@ -372,25 +368,6 @@ function GiftCardPurchaseFormFallback() {
   );
 }
 
-function QuantityPickerFallback() {
-  return (
-    <div
-      aria-hidden="true"
-      className="grid h-12 w-32 shrink-0 grid-cols-[3rem_2rem_3rem] rounded-lg bg-background ring-1 ring-border ring-inset"
-    >
-      <span className="flex size-12 items-center justify-center opacity-50">
-        <MinusIcon className="size-4 shrink-0" />
-      </span>
-      <span className="flex h-12 w-8 items-center justify-center text-sm font-medium tabular-nums">
-        1
-      </span>
-      <span className="flex size-12 items-center justify-center">
-        <PlusIcon className="size-4 shrink-0" />
-      </span>
-    </div>
-  );
-}
-
 function BuyButtonsFallback({
   allInStock,
   showLabel,
@@ -412,19 +389,19 @@ function BuyButtonsFallback({
           selectedPlan={selectedPlan}
         />
       ) : null}
-      <div className="flex flex-wrap gap-2.5">
-        {shopConfig.pdp.quantityPicker.isEnabled ? <QuantityPickerFallback /> : null}
-        <div className="flex h-12 min-w-40 flex-1 items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground">
-          {showLabel ? (allInStock ? "Add to Cart" : "Out of Stock") : null}
-        </div>
+      <div
+        className={cn(
+          "flex h-12 w-full items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground",
+          showLabel && !allInStock && "cursor-not-allowed opacity-50",
+        )}
+      >
+        {showLabel ? (allInStock ? "Add to Cart" : "Sold out") : null}
       </div>
-      {shopConfig.pdp.buyWithShop.isEnabled && !selectedPlan && !variant?.requiresSellingPlan ? (
-        <div
-          className={cn(
-            "flex h-12 items-center justify-center rounded-lg bg-shop px-4 text-white",
-            !allInStock && "invisible",
-          )}
-        >
+      {shopConfig.pdp.buyWithShop.isEnabled &&
+      allInStock &&
+      !selectedPlan &&
+      !variant?.requiresSellingPlan ? (
+        <div className="flex h-12 items-center justify-center rounded-lg bg-shop px-4 text-white">
           <BuyWithShopLogo aria-hidden="true" className="h-auto w-24.5" />
         </div>
       ) : null}
@@ -437,48 +414,22 @@ export function ProductDetailSkeleton() {
     <div aria-busy="true" className="grid gap-10 lg:grid-cols-10 lg:items-start lg:gap-5">
       <div className="lg:col-span-6">
         {/* Media blocks stay static; a pulsing skeleton in the LCP slot flashes harder than an empty image canvas. */}
-        <div className="grid gap-5 lg:hidden">
-          <div className="-mx-5 aspect-square w-[calc(100%+2.5rem)] bg-accent" />
-          <div aria-hidden="true" className="h-1.5" />
-        </div>
-        <div className="hidden grid-cols-2 gap-2.5 lg:grid">
-          <div className="aspect-square w-full bg-accent" />
-          <div className="aspect-square w-full bg-accent" />
-          <div className="aspect-square w-full bg-accent" />
-          <div className="aspect-square w-full bg-accent" />
-        </div>
+        <div className="-mx-5 aspect-[4/5] w-[calc(100%+2.5rem)] bg-accent lg:mx-0 lg:w-full" />
       </div>
       <div className="grid gap-10 lg:sticky lg:top-20 lg:col-span-4">
-        <div className="grid gap-10">
-          <div>
-            <Skeleton className="h-9 w-3/4" />
-            <Skeleton className="h-7 w-24" />
-          </div>
-          <div className="grid gap-10">
-            <div className="grid gap-5">
-              <Skeleton className="h-5 w-32" />
-              <div className="grid gap-2.5">
-                <Skeleton className="h-5 w-16" />
-                <div className="flex flex-wrap gap-2">
-                  {["w-15", "w-16", "w-16", "w-15", "w-15"].map((width, index) => (
-                    <Skeleton key={index} className={cn("h-9.5 rounded-lg", width)} />
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="grid gap-2.5">
-              <div className="flex flex-wrap gap-2.5">
-                {shopConfig.pdp.quantityPicker.isEnabled ? <QuantityPickerFallback /> : null}
-                <Skeleton className="h-12 min-w-40 flex-1" />
-              </div>
-              {shopConfig.pdp.buyWithShop.isEnabled ? <Skeleton className="h-12 w-full" /> : null}
-            </div>
-          </div>
+        <div>
+          <Skeleton className="h-9 w-3/4 sm:h-10" />
+          <Skeleton className="h-7 w-20" />
         </div>
-        <div className="grid gap-4">
-          <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-5 w-32" />
+        <div className="grid gap-2.5">
+          <Skeleton className="h-12 w-full" />
+          {shopConfig.pdp.buyWithShop.isEnabled ? <Skeleton className="h-12 w-full" /> : null}
+        </div>
+        <div className="grid gap-2.5">
           <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-4/5" />
         </div>
       </div>
     </div>
