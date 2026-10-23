@@ -1,5 +1,7 @@
 import { Link } from "@/components/ui/link";
 
+import { Blossom } from "./blossom";
+
 const STARS = [
   { delay: "0s", left: "8%", size: "2px", top: "14%" },
   { delay: "0.8s", left: "18%", size: "1.5px", top: "28%" },
@@ -87,11 +89,9 @@ function Crescent() {
           d="M196 46c-62 8-108 62-108 126 0 64 48 116 112 122-58-14-100-66-100-126C100 104 146 54 196 46Z"
           fill="url(#moon-face)"
         />
-        <path
-          d="M168 92c8 2 12 10 10 18-6 2-14-2-16-10-2-6 0-10 6-8Z"
-          fill="#c9b6e4"
-          opacity="0.7"
-        />
+        <g transform="translate(174 104) scale(6.4)">
+          <Blossom />
+        </g>
       </svg>
     </div>
   );
