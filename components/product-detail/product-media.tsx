@@ -28,12 +28,11 @@ const LCP_IMAGE_PROPS = { fetchPriority: "high", loading: "eager", preload: true
 
 const LAZY_IMAGE_PROPS = { loading: "lazy" } as const;
 
-// Tailwind `lg`, where the 2x2 grid replaces the carousel.
+// Tailwind `lg`, where the desktop grid replaces the carousel.
 const DESKTOP_MEDIA = "(min-width: 1024px)";
-// The 2x2 desktop grid is entirely above the fold. Its non-LCP tiles stay `loading="lazy"` on the
-// <img> (so mobile never fetches them) but get a media-scoped preload so desktop requests all four
-// tiles at parse time instead of one at a time after layout. Uses getImageProps so the preload's
-// srcset/sizes match the <img> exactly and the browser reuses the response.
+// Non-LCP tiles stay `loading="lazy"` on the <img> (so mobile never fetches them) but get a
+// media-scoped preload so the desktop grid requests them at parse time. Uses getImageProps so the
+// preload's srcset/sizes match the <img> exactly and the browser reuses the response.
 const DESKTOP_GRID_PRELOAD_COUNT = 4;
 
 function preloadDesktopGridImage(image: ImageType) {
@@ -117,7 +116,7 @@ function Carousel({
   children?: ReactNode;
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [itemCount, setItemCount] = useState(mediaItems.length);
+  const [itemCount, setItemCount] = useState(mediaItems.length + (hasColorSlot ? 1 : 0));
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const scrollToImage = (index: number) => {
     if (!container) return;
@@ -168,7 +167,7 @@ function Carousel({
           return (
             <div
               key={mediaKey(item)}
-              className="relative shrink-0 w-full snap-start snap-always overflow-hidden aspect-square"
+              className="relative shrink-0 w-full snap-start snap-always overflow-hidden aspect-[4/5]"
             >
               {item.type === "video" ? (
                 <MediaVideo item={item} priority={priority} />
@@ -182,23 +181,24 @@ function Carousel({
         })}
       </div>
 
-      {/* Dot indicators – reserve space but hide when there's only one image */}
-      <div className={cn("flex justify-center gap-2", itemCount <= 1 && "invisible")}>
-        {Array.from({ length: itemCount }, (_, idx) => (
-          <button
-            type="button"
-            key={idx}
-            onClick={() => scrollToImage(idx)}
-            className={cn(
-              "h-1.5 rounded-full transition-all",
-              idx === selectedIndex
-                ? "bg-foreground w-8"
-                : "bg-muted-foreground/30 w-1.5 hover:bg-muted-foreground/50",
-            )}
-            aria-label={`Go to image ${idx + 1}`}
-          />
-        ))}
-      </div>
+      {itemCount > 1 ? (
+        <div className="flex justify-center gap-2">
+          {Array.from({ length: itemCount }, (_, idx) => (
+            <button
+              type="button"
+              key={idx}
+              onClick={() => scrollToImage(idx)}
+              className={cn(
+                "h-1.5 rounded-full transition-all",
+                idx === selectedIndex
+                  ? "bg-foreground w-8"
+                  : "bg-muted-foreground/30 w-1.5 hover:bg-muted-foreground/50",
+              )}
+              aria-label={`Go to image ${idx + 1}`}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -215,7 +215,7 @@ function GridItem({
   priority: boolean;
 }) {
   return (
-    <div className="relative w-full overflow-hidden aspect-square">
+    <div className="relative w-full overflow-hidden aspect-[4/5]">
       {item.type === "video" ? (
         <MediaVideo item={item} priority={priority} />
       ) : item.type === "placeholder" ? (
@@ -251,8 +251,9 @@ function Grid({
     if (tile > 0 && item.type === "image") preloadDesktopGridImage(item.image);
   }
 
+  const tileCount = mediaItems.length + (hasColorSlot ? 1 : 0);
   const grid = (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div className={cn("grid gap-2.5", tileCount > 1 ? "grid-cols-2" : "grid-cols-1")}>
       {children}
       {mediaItems.map((item, idx) => (
         <GridItem
@@ -285,7 +286,7 @@ export function ColorImageCarouselItems({ images, title }: { images: ImageType[]
   return images.map((image, idx) => (
     <div
       key={image.url}
-      className="relative shrink-0 w-full snap-start snap-always overflow-hidden aspect-square"
+      className="relative shrink-0 w-full snap-start snap-always overflow-hidden aspect-[4/5]"
     >
       <Image
         src={image.url}

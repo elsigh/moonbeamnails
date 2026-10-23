@@ -48,7 +48,7 @@ export const shopConfig = {
       isEnabled: true,
     },
     quantityPicker: {
-      isEnabled: true,
+      isEnabled: false,
     },
     relatedProducts: {
       isEnabled: true,

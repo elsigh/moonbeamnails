@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { type ReactNode, Suspense } from "react";
 
-import { ProductViewedTracker } from "@/components/analytics/trackers";
 import {
+  ProductColorCarousel,
+  ProductColorGrid,
   ProductDetailSection,
   ProductDetailSkeleton,
+  ProductPurchase,
 } from "@/components/product-detail/product-detail-section";
 import { RecentlyViewedRecorder } from "@/components/product-detail/recently-viewed";
 import { RelatedProductsSection } from "@/components/product/related-products-section";
@@ -13,12 +15,8 @@ import { Container } from "@/components/ui/container";
 import { Page } from "@/components/ui/page";
 import { Sections } from "@/components/ui/sections";
 import { shopConfig } from "@/lib/config";
-import { defaultSelectedOptions, parseSelectedOptions, toSelectedOptionList } from "@/lib/product";
-import { getProduct, getSearchIndexProducts } from "@/lib/product/server";
-import { type SelectedOptions } from "@/lib/product/types";
-import type { ProductVariant } from "@/lib/product/types";
+import { getProduct, getProductHandles } from "@/lib/product/server";
 import { buildAlternates, buildOpenGraph } from "@/lib/seo";
-import { fetchProductVariant } from "@/lib/shopify/operations/products/server";
 import { PLACEHOLDER_HANDLE } from "@/lib/static-params";
 
 async function buildProductMetadata(handle: string, canonicalPath: string): Promise<Metadata> {
@@ -59,9 +57,10 @@ async function buildProductMetadata(handle: string, canonicalPath: string): Prom
 
 export async function generateStaticParams() {
   try {
-    const { products } = await getSearchIndexProducts({ limit: 1 });
-    const first = products[0];
-    return [{ handle: first ? first.handle : PLACEHOLDER_HANDLE }];
+    const handles = await getProductHandles();
+    return handles.length > 0
+      ? handles.map((handle) => ({ handle }))
+      : [{ handle: PLACEHOLDER_HANDLE }];
   } catch {
     return [{ handle: PLACEHOLDER_HANDLE }];
   }
@@ -81,7 +80,12 @@ export default function ProductPage({ params, searchParams }: PageProps<"/produc
       <Container className="bg-background">
         <Sections>
           <Suspense fallback={<ProductDetailSkeleton />}>
-            <ProductPageContent params={params} searchParams={searchParams} />
+            <ProductFrame
+              colorCarousel={<ProductColorCarousel params={params} searchParams={searchParams} />}
+              colorGrid={<ProductColorGrid params={params} searchParams={searchParams} />}
+              params={params}
+              purchase={<ProductPurchase params={params} searchParams={searchParams} />}
+            />
           </Suspense>
         </Sections>
       </Container>
@@ -89,10 +93,17 @@ export default function ProductPage({ params, searchParams }: PageProps<"/produc
   );
 }
 
-async function ProductPageContent({
+async function ProductFrame({
+  colorCarousel,
+  colorGrid,
   params,
-  searchParams,
-}: Pick<PageProps<"/products/[handle]">, "params" | "searchParams">) {
+  purchase,
+}: {
+  colorCarousel: ReactNode;
+  colorGrid: ReactNode;
+  params: PageProps<"/products/[handle]">["params"];
+  purchase: ReactNode;
+}) {
   const { handle } = await params;
   if (handle === PLACEHOLDER_HANDLE) notFound();
   const product = await getProduct({
@@ -100,43 +111,8 @@ async function ProductPageContent({
   });
   if (!product) notFound();
 
-  // Keep selection separate from the variant query so the static shell stays coherent and the picker never waits on Shopify.
-  const selectedOptionsPromise: Promise<SelectedOptions> = searchParams.then(
-    (resolvedSearchParams) => ({
-      ...defaultSelectedOptions(product),
-      ...parseSelectedOptions(product.options, resolvedSearchParams ?? {}),
-    }),
-  );
-  const variantPromise: Promise<ProductVariant | undefined> = searchParams.then(
-    async (resolvedSearchParams) => {
-      if (
-        Object.keys(parseSelectedOptions(product.options, resolvedSearchParams ?? {})).length === 0
-      ) {
-        return product.defaultVariant;
-      }
-      // Uncached: the selected variant's price and stock are read live per request, and caching per option combination multiplies entries by variant count.
-      return fetchProductVariant({
-        handle,
-        selectedOptions: toSelectedOptionList({
-          ...defaultSelectedOptions(product),
-          ...parseSelectedOptions(product.options, resolvedSearchParams ?? {}),
-        }),
-      });
-    },
-  );
   return (
     <>
-      <Suspense fallback={null}>
-        <ProductViewedTracker
-          product={{
-            handle: product.handle,
-            id: product.id,
-            title: product.title,
-            vendor: product.vendor,
-          }}
-          variantPromise={variantPromise}
-        />
-      </Suspense>
       <RecentlyViewedRecorder
         product={{
           featuredImage: product.featuredImage,
@@ -147,9 +123,10 @@ async function ProductPageContent({
         }}
       />
       <ProductDetailSection
+        colorCarousel={colorCarousel}
+        colorGrid={colorGrid}
         product={product}
-        selectedOptionsPromise={selectedOptionsPromise}
-        variantPromise={variantPromise}
+        purchase={purchase}
       />
       {shopConfig.pdp.relatedProducts.isEnabled ? (
         <RelatedProductsSection handle={handle} limit={4} />

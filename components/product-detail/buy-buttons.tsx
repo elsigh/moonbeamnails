@@ -1,7 +1,6 @@
 "use client";
 
 import { getShopPayButtonUrl } from "@shopify/hydrogen";
-import { cn } from "cn";
 import { Loader2, MinusIcon, PlusIcon } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
@@ -28,7 +27,7 @@ export function BuyButtons({
   buyWithShop = true,
   fallbackVariant,
   onAddToCart,
-  quantityPicker = true,
+  quantityPicker = false,
 }: BuyButtonsProps) {
   const { formProps, pending, register, selectedVariant: storeVariant } = useProductForm();
   const selectedVariant = storeVariant ?? fallbackVariant;
@@ -62,7 +61,7 @@ export function BuyButtons({
     if (isSelectionUnresolved) return "Add to Cart";
     if (requiresBundleConfiguration) return "Choose bundle items";
     if (missingRequiredPlan) return "Subscription unavailable";
-    if (isOutOfStock) return "Out of Stock";
+    if (isOutOfStock) return "Sold out";
     return "Add to Cart";
   };
   return (
@@ -145,15 +144,16 @@ export function BuyButtons({
           {getButtonText()}
         </Button>
       </div>
-      {buyWithShop && !selectedPlan && !selectedVariant.requiresSellingPlan ? (
+      {buyWithShop &&
+      availableForSale &&
+      !isOutOfStock &&
+      !selectedPlan &&
+      !selectedVariant.requiresSellingPlan ? (
         <a
           aria-busy={isBuyingNow || undefined}
           aria-disabled={buyNowUrl ? undefined : true}
           aria-label="Buy with Shop Pay"
-          className={cn(
-            "flex h-12 w-full cursor-pointer items-center justify-center rounded-lg bg-shop px-4 text-white transition-colors hover:bg-shop/85 aria-busy:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-[selection-unresolved=true]:aria-disabled:opacity-100",
-            !availableForSale && "invisible",
-          )}
+          className="flex h-12 w-full cursor-pointer items-center justify-center rounded-lg bg-shop px-4 text-white transition-colors hover:bg-shop/85 aria-busy:pointer-events-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50 data-[selection-unresolved=true]:aria-disabled:opacity-100"
           data-selection-unresolved={isSelectionUnresolved}
           href={buyNowUrl ?? undefined}
           onClick={(event) => {

@@ -17,10 +17,7 @@ export async function Footer() {
   const items: MenuItem[] = [
     {
       id: "footer-shop",
-      items: [
-        { id: "footer-all", items: [], title: "Shop all", url: "/collections/all" },
-        { id: "footer-collections", items: [], title: "Collections", url: "/collections" },
-      ],
+      items: [{ id: "footer-all", items: [], title: "Shop all", url: "/collections/all" }],
       title: "Shop",
       url: "/collections/all",
     },

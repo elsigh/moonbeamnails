@@ -10,6 +10,7 @@ import { OptionPicker } from "./option-picker";
 interface ProductInfoOptionsProps extends ComponentProps<"div"> {
   compact?: boolean;
   hideImages?: boolean;
+  include?: "all" | "choices" | "single";
   onSelectValue?: (optionName: string, value: string) => void;
   options: OptionGroupState[];
 }
@@ -17,6 +18,7 @@ interface ProductInfoOptionsProps extends ComponentProps<"div"> {
 function ProductInfoOptions({
   compact = false,
   hideImages,
+  include = "all",
   onSelectValue,
   options,
   className,
@@ -27,15 +29,22 @@ function ProductInfoOptions({
     opt.name === "Title" && opt.values.length === 1 && opt.values[0]?.name === "Default Title";
   const isSingleValueOption = (opt: OptionGroupState) => opt.values.length === 1;
   const renderable = options.filter((opt) => !isShopifyDefaultOption(opt));
-  if (renderable.length === 0) return null;
+  const visible = renderable.filter((opt) =>
+    include === "all"
+      ? true
+      : include === "single"
+        ? isSingleValueOption(opt)
+        : !isSingleValueOption(opt),
+  );
+  if (visible.length === 0) return null;
 
-  const singleValueOptions = renderable.filter(isSingleValueOption);
-  const colorOptions = renderable.filter((opt) => !isSingleValueOption(opt) && isColorOption(opt));
-  const otherOptions = renderable.filter((opt) => !isSingleValueOption(opt) && !isColorOption(opt));
+  const colorOptions = visible.filter((opt) => !isSingleValueOption(opt) && isColorOption(opt));
+  const otherOptions = visible.filter((opt) => !isSingleValueOption(opt) && !isColorOption(opt));
+  const shownSingleOptions = visible.filter(isSingleValueOption);
   return (
     <div data-slot="product-info-options" className={className} {...props}>
       <div className={cn("grid", compact ? "gap-2.5" : "gap-5")}>
-        {singleValueOptions.map((option) => (
+        {shownSingleOptions.map((option) => (
           <p key={option.name} className="text-sm font-medium text-foreground/70">
             {option.name}: <span className="text-foreground">{option.values[0]?.name}</span>
           </p>

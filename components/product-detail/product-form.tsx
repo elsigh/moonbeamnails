@@ -60,7 +60,9 @@ export function ProductFormOptions({ handle }: ProductFormOptionsProps) {
       };
     }),
   }));
-  return <ProductInfoOptions options={optionGroups} onSelectValue={selectOption} />;
+  return (
+    <ProductInfoOptions include="choices" options={optionGroups} onSelectValue={selectOption} />
+  );
 }
 
 export function ProductFormPrice({
