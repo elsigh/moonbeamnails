@@ -103,7 +103,7 @@ const POLICIES = [
     title: "Privacy",
   },
   {
-    body: "<p>Each set is handmade press-on nails for personal wear. Sizes run XS, S, M, and L. Shapes are almond, coffin, and square.</p><p>The pictures on this site show the artwork. Your set is painted by Opal in a small batch, so the shimmer and the tiny stars will be close to the picture, not a print of it.</p>",
+    body: "<p>Each set is handmade press-on nails for personal wear. The size chart runs from XS to L, and the sizes you can order are listed on that set. Preview sets include XS, S, M, and L, and the shapes almond, coffin, and square.</p><p>The pictures on this site show the artwork. Your set is painted by Opal in a small batch, so the shimmer and the tiny stars will be close to the picture, not a print of it.</p>",
     handle: "terms-of-service",
     title: "Terms of service",
   },
@@ -484,6 +484,10 @@ function collectionProducts(handle: string): MockProduct[] {
 
 export function mockOperation(operation: string, variables: Record<string, unknown>) {
   switch (operation) {
+    case "catalogProducts":
+      return {
+        products: browseProducts({ ...variables, sortKey: variables.sortKey ?? "TITLE" }, PRODUCTS),
+      };
     case "collectionProducts":
       return mockCollectionProducts(variables);
     case "getArticleSitemapPage":

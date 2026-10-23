@@ -35,8 +35,8 @@ export async function Footer() {
           <div className="grid justify-items-center gap-2.5 sm:justify-items-start">
             <Wordmark />
             <p className="max-w-md text-center text-sm text-muted-foreground sm:text-left">
-              Handmade press-on nails, painted in small batches by Opal. Sizes XS through L, in
-              almond, coffin, and square.
+              Handmade press-on nails, painted in small batches by Opal. Each set lists the sizes
+              you can order.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-5">

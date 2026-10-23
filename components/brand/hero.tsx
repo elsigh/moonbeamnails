@@ -45,7 +45,7 @@ export function Hero() {
           <h1 className="font-display text-5xl text-pearl md:text-7xl">Moonbeam Nails</h1>
           <p className="max-w-xl text-base text-pearl/90 md:text-lg">
             Soft lavender, pearl, and moonlight silver, painted in small batches by Opal. Choose a
-            size and a shape, then wear them tonight.
+            set, then the size listed on it, and wear them tonight.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2.5 md:justify-start">
             <Link

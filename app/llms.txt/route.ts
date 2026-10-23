@@ -25,7 +25,7 @@ export async function GET(): Promise<Response> {
 
 > ${escapeMarkdown(summarizeText(description))}
 
-Moonbeam Nails is a small press-on studio. Sets are painted by hand and offered in sizes XS, S, M, and L and shapes almond, coffin, and square.
+Moonbeam Nails is a small press-on studio. Sets are painted by hand. The size chart runs from XS to L, and each set lists the sizes that are available.
 
 Home, product, collection, and search pages return Markdown with an \`Accept: text/markdown\` header or at the page URL with \`.md\` appended (\`/index.md\` for the home page). Prices and availability use Shopify country \`${country}\` and language \`${language}\`.
 

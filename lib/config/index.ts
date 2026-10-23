@@ -69,7 +69,7 @@ export const shopConfig = {
   },
   site: {
     description:
-      "Handmade press-on nails from Moonbeam Nails, painted in small batches by Opal. Sizes XS through L, in almond, coffin, and square.",
+      "Handmade press-on nails from Moonbeam Nails, painted in small batches by Opal. Each set lists the sizes you can order.",
     name: "Moonbeam Nails",
     url: defaultUrl,
   },
